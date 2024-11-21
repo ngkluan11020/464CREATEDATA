@@ -1,0 +1,34 @@
+Use Case Name: Redeem Tesco Clubcard Points for Rewards
+Actors:
+Primary Actor: Tesco Clubcard Member (Customer)
+Secondary Actor: Tesco Clubcard System
+Preconditions:
+The customer must be a registered Tesco Clubcard member.
+The customer has accumulated at least 150 points in their Clubcard account.
+Triggers:
+The customer decides to redeem their Tesco Clubcard points for vouchers or discounts.
+Main Success Scenario:
+The customer logs into their Tesco Clubcard account through the website or mobile app.
+The system displays the total points available in the account.
+The customer selects the "Redeem Points" option.
+The system calculates the eligible voucher value (e.g., 150 points = 1 voucher).
+The customer chooses the preferred option to use the voucher:
+Purchase groceries, clothing, electronics, or other Tesco products.
+Apply discounts in-store or online.
+The system processes the redemption and updates the customer's points balance.
+The voucher or discount is successfully applied to the customer's selected purchase.
+Postconditions:
+The customer's points balance reflects the deduction.
+The voucher or discount is issued or applied successfully.
+Alternative Flows:
+A1: If the customer does not have enough points:
+The system informs the customer of the shortfall and suggests accumulating more points.
+A2: If there’s an error in redemption:
+The system notifies the customer and provides contact support options.
+Business Rules:
+Customers earn points for every pound spent in-store, online, or at Tesco petrol stations.
+Points may also be earned through Tesco Bank credit card transactions.
+Points conversion ratio and redemption conditions are subject to Tesco’s terms and conditions.
+Exceptions:
+Points may expire if unused for a specified duration (as per Tesco’s policy).
+Technical issues with the Clubcard system could delay voucher redemption.
