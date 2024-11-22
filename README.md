@@ -865,7 +865,39 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
+-- -----------------------------------------------------
+-- Table `grocerystoredb`.`clubcard`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `grocerystoredb`.`clubcard`;
+CREATE TABLE `grocerystoredb`.`clubcard` (
+    Card_ID INT PRIMARY KEY,
+    Points_Balance INT NOT NULL,
+    Customer_ID INT,
+    Last_Updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (Customer_ID) REFERENCES `grocerystoredb`.`customer`(Customer_ID)
+);
 
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+-- -----------------------------------------------------
+-- Table `grocerystoredb`.`voucher`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `grocerystoredb`.`voucher`;
+CREATE TABLE `grocerystoredb`.`voucher` (
+    Voucher_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Card_ID INT,
+    Voucher_Value DECIMAL(10,2),
+    Redemption_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (Card_ID) REFERENCES `grocerystoredb`.`clubcard`(Card_ID)
+);
+
+-- -----------------------------------------------------
+-- Table `grocerystoredb`.`pointstransaction`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `grocerystoredb`.`pointstransaction`;
+CREATE TABLE pointstransaction (
+    Transaction_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Card_ID INT,
+    Transaction_Type VARCHAR(50),
+    Points_Changed INT,
+    Transaction_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (Card_ID) REFERENCES `grocerystoredb`.`clubcard`(Card_ID)
+);
