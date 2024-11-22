@@ -1,0 +1,53 @@
+DELIMITER $$
+
+CREATE PROCEDURE ApplyDiscountUsingPoints(
+    IN p_CustomerID INT,       -- Customer ID
+    IN p_OrderID INT,          -- Order ID
+    IN p_UsePoints INT         -- Points to use for discount
+)
+BEGIN
+    DECLARE v_TotalPoints INT;
+    DECLARE v_DiscountValue DECIMAL(10,2);
+    DECLARE v_OrderTotal DECIMAL(10,2);
+    DECLARE v_StatusMessage VARCHAR(255);
+
+    -- Step 1: Check if customer has sufficient points
+    SELECT Points_Balance INTO v_TotalPoints
+    FROM Clubcard
+    WHERE Customer_ID = p_CustomerID;
+
+    IF v_TotalPoints < p_UsePoints THEN
+        SET v_StatusMessage = CONCAT('Insufficient points. You need ', p_UsePoints - v_TotalPoints, ' more points.');
+        SELECT v_StatusMessage AS Status;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insufficient points';
+    END IF;
+
+    -- Step 2: Calculate discount value (100 points = $1 discount)
+    SET v_DiscountValue = (p_UsePoints / 100);
+
+    -- Step 3: Deduct points and update the balance
+    UPDATE Clubcard
+    SET Points_Balance = Points_Balance - p_UsePoints
+    WHERE Customer_ID = p_CustomerID;
+
+    -- Step 4: Apply the discount to the order
+    SELECT Total_Amount INTO v_OrderTotal
+    FROM `grocerystoredb`.`order`
+    WHERE Order_ID = p_OrderID;
+
+    SET v_OrderTotal = v_OrderTotal - v_DiscountValue;
+
+    UPDATE `grocerystoredb`.`order`
+    SET Total_Amount = v_OrderTotal, Discount_Amount = v_DiscountValue
+    WHERE Order_ID = p_OrderID;
+
+    -- Step 5: Record the transaction in PointsTransaction
+    INSERT INTO PointsTransaction (Customer_ID, Transaction_Type, Points_Changed, Transaction_Date)
+    VALUES (p_CustomerID, 'Discount', -p_UsePoints, NOW());
+
+    -- Step 6: Confirm successful discount application
+    SET v_StatusMessage = CONCAT('Discount applied successfully! Discount value: $', v_DiscountValue, '.');
+    SELECT v_StatusMessage AS Status;
+END$$
+
+DELIMITER ;
