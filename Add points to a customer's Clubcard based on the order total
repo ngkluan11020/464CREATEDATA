@@ -62,3 +62,56 @@ DELIMITER ;
 
 
 CALL AddClubcardPoints(123); -- where 123 is the Order_ID
+
+
+
+ALTER TABLE grocerystoredb.pointstransaction
+ADD COLUMN Order_ID INT;
+
+ALTER TABLE grocerystoredb.`order`
+ADD COLUMN `Status` ENUM('Pending', 'Complete') DEFAULT 'Pending';
+
+DELIMITER //
+
+CREATE TRIGGER AfterOrderUpdate
+AFTER UPDATE ON grocerystoredb.`order`
+FOR EACH ROW
+BEGIN
+    -- Trigger only when the Status is set to 'Complete' and the Customer_ID is in the clubcard table
+    IF NEW.Status = 'Complete' AND OLD.Status != 'Complete' THEN
+        -- Ensure the customer is in the loyalty program
+        IF (SELECT COUNT(*) 
+            FROM grocerystoredb.clubcard 
+            WHERE Customer_ID = NEW.Customer_ID) > 0 THEN
+
+            -- Check if the points for the order have already been awarded
+            IF (SELECT COUNT(*) 
+                FROM grocerystoredb.pointstransaction 
+                WHERE Transaction_Type = 'Earned' AND Card_ID = (SELECT Card_ID FROM grocerystoredb.clubcard WHERE Customer_ID = NEW.Customer_ID) AND Order_ID = NEW.Order_ID) = 0 THEN
+
+                -- Calculate points to add (2 points per £1 spent)
+                SET @pointsToAdd = FLOOR(NEW.Total_Amount * 2);
+
+                -- Update the customer's Clubcard points balance
+                UPDATE grocerystoredb.clubcard
+                SET Points_Balance = Points_Balance + @pointsToAdd
+                WHERE Customer_ID = NEW.Customer_ID;
+
+                -- Log the transaction in PointsTransaction table
+                INSERT INTO grocerystoredb.pointstransaction (Card_ID, Transaction_Type, Points_Changed, Transaction_Date, Order_ID)
+                SELECT Card_ID, 'Earned', @pointsToAdd, NOW(), NEW.Order_ID
+                FROM grocerystoredb.clubcard
+                WHERE Customer_ID = NEW.Customer_ID;
+            END IF;
+        END IF;
+    END IF;
+END //
+
+DELIMITER ;
+
+
+
+
+
+
+
