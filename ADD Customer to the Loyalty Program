@@ -10,10 +10,10 @@ BEGIN
     INSERT INTO `grocerystoredb`.`clubcard` (`Customer_ID`, `Points_Balance`, `Last_Updated`)
     VALUES (customerId, 0, CURRENT_TIMESTAMP);
     
-    -- Optionally, add a welcome bonus if needed
-    -- UPDATE `grocerystoredb`.`clubcard`
-    -- SET `Points_Balance` = 100
-    -- WHERE `Customer_ID` = customerId;
+     -- Optionally, add a welcome bonus if needed
+    UPDATE `grocerystoredb`.`clubcard`
+    SET `Points_Balance` = 1000
+    WHERE `Customer_ID` = customerId;
 END //
 
 DELIMITER ;
