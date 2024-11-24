@@ -60,5 +60,38 @@ END //
 DELIMITER ;
 
 
+ALTER TABLE grocerystoredb.order
+ADD COLUMN Points_Awarded BOOLEAN DEFAULT FALSE;
 
-CALL AddClubcardPoints(123); -- where 123 is the Order_ID
+DELIMITER //
+
+CREATE TRIGGER AfterOrderUpdate
+AFTER UPDATE ON grocerystoredb.order
+FOR EACH ROW
+BEGIN
+    -- Check if points have not already been awarded
+    IF NEW.Points_Awarded = FALSE THEN
+        -- Calculate points based on the Total_Amount
+        DECLARE pointsToAdd INT;
+        SET pointsToAdd = FLOOR(NEW.Total_Amount * 2);  -- 2 points per £1 spent
+
+        -- Update the customer's Clubcard points balance
+        UPDATE grocerystoredb.clubcard
+        SET Points_Balance = Points_Balance + pointsToAdd
+        WHERE Customer_ID = NEW.Customer_ID;
+
+        -- Log the transaction in PointsTransaction table
+        INSERT INTO grocerystoredb.pointstransaction (Card_ID, Transaction_Type, Points_Changed, Transaction_Date)
+        SELECT Card_ID, 'Earned', pointsToAdd, NOW()
+        FROM grocerystoredb.clubcard
+        WHERE Customer_ID = NEW.Customer_ID;
+
+        -- Mark points as awarded
+        UPDATE grocerystoredb.order
+        SET Points_Awarded = TRUE
+        WHERE Order_ID = NEW.Order_ID;
+    END IF;
+END //
+
+DELIMITER ;
+
