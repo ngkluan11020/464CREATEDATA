@@ -1,4 +1,4 @@
-
+DELIMITER //
 CREATE PROCEDURE ApplyDiscountUsingPoints(
     IN p_CustomerID INT,       -- Customer ID
     IN p_OrderID INT,          -- Order ID
@@ -63,4 +63,6 @@ BEGIN
     -- Success message
     SET v_StatusMessage = CONCAT('Discount applied successfully! Discount value: $', v_DiscountValue, '.');
     SELECT v_StatusMessage AS Status;
-END$$
+END //
+
+DELIMITER ;
