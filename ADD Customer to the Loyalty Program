@@ -1,0 +1,21 @@
+-- Procedure to add a customer to the loyalty program using the existing `clubcard` table
+DELIMITER //
+
+CREATE PROCEDURE AddLoyaltyMember(IN customerId INT)
+BEGIN
+    DECLARE currentDate DATE;
+    SET currentDate = CURRENT_DATE();
+    
+    -- Insert the new loyalty member into the clubcard table
+    INSERT INTO `grocerystoredb`.`clubcard` (`Customer_ID`, `Points_Balance`, `Last_Updated`)
+    VALUES (customerId, 0, CURRENT_TIMESTAMP);
+    
+    -- Optionally, add a welcome bonus if needed
+    -- UPDATE `grocerystoredb`.`clubcard`
+    -- SET `Points_Balance` = 100
+    -- WHERE `Customer_ID` = customerId;
+END //
+
+DELIMITER ;
+
+CALL AddLoyaltyMember(456); -- where 456 is the Customer_ID
