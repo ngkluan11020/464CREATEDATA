@@ -8,37 +8,56 @@ BEGIN
     DECLARE orderTotal DECIMAL(10,2);
     DECLARE pointsToAdd INT;
     DECLARE currentPoints INT;
-    
-    -- Get the order details
+
+    -- Declare an exit handler for any unexpected SQL errors
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- If an error occurs, rollback the transaction
+        ROLLBACK;
+        -- Optionally, return an error message or take other actions
+        SELECT 'An error occurred, transaction rolled back.' AS ErrorMessage;
+    END;
+
+    -- Start the transaction
+    START TRANSACTION;
+
+    -- Step 1: Get the order details
     SELECT `Customer_ID`, `Total_Amount` INTO customerId, orderTotal
     FROM `grocerystoredb`.`order`
     WHERE `Order_ID` = orderId;
-    
-    -- Get the customer's Clubcard ID and current points balance
+
+    -- Step 2: Get the customer's Clubcard ID and current points balance
     SELECT `Card_ID`, `Points_Balance` INTO cardId, currentPoints
     FROM `grocerystoredb`.`clubcard`
     WHERE `Customer_ID` = customerId;
-    
-    -- Calculate points to add based on the fixed policy (1 point per £1 spent)
+
+    -- Step 3: Calculate points to add based on the fixed policy (1 point per £1 spent)
     SET pointsToAdd = FLOOR(orderTotal * 1);  -- Assuming 1 point per £1 spent
-    
-    -- Add points to the customer's Clubcard
+
+    -- Step 4: Add points to the customer's Clubcard
     UPDATE `grocerystoredb`.`clubcard`
     SET `Points_Balance` = currentPoints + pointsToAdd,
         `Last_Updated` = CURRENT_TIMESTAMP
     WHERE `Card_ID` = cardId;
-    
-    -- Record the points transaction
+
+    -- Step 5: Record the points transaction
     INSERT INTO `grocerystoredb`.`pointstransaction` (`Card_ID`, `Transaction_Type`, `Points_Changed`, `Transaction_Date`)
     VALUES (cardId, 'Earned', pointsToAdd, CURRENT_TIMESTAMP);
-    
-    -- Update the order to reflect points awarded
+
+    -- Step 6: Update the order to reflect points awarded
     UPDATE `grocerystoredb`.`order`
     SET `Points_Awarded` = pointsToAdd
     WHERE `Order_ID` = orderId;
+
+    -- If all steps are successful, commit the transaction
+    COMMIT;
+
+    -- Optionally, return a success message
+    SELECT 'Points added successfully!' AS Status;
 END //
 
 DELIMITER ;
+
 
 
 CALL AddClubcardPoints(123); -- where 123 is the Order_ID
