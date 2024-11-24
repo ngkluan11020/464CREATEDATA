@@ -31,8 +31,8 @@ BEGIN
     FROM `grocerystoredb`.`clubcard`
     WHERE `Customer_ID` = customerId;
 
-    -- Step 3: Calculate points to add based on the fixed policy (1 point per £1 spent)
-    SET pointsToAdd = FLOOR(orderTotal * 1);  -- Assuming 1 point per £1 spent
+    -- Step 3: Calculate points to add based on the fixed policy (2 point per £1 spent)
+    SET pointsToAdd = FLOOR(orderTotal * 2);  -- Assuming 2 point per £1 spent
 
     -- Step 4: Add points to the customer's Clubcard
     UPDATE `grocerystoredb`.`clubcard`
