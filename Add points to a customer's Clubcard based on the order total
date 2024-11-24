@@ -32,6 +32,7 @@ BEGIN
     WHERE `Customer_ID` = customerId;
 
     -- Step 3: Calculate points to add based on the fixed policy (2 point per £1 spent)
+    SET orderTotal = ROUND(orderTotal);
     SET pointsToAdd = FLOOR(orderTotal * 2);  -- Assuming 2 point per £1 spent
 
     -- Step 4: Add points to the customer's Clubcard
