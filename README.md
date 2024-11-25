@@ -1,5 +1,15 @@
-# 464CREATEDATA
+-- MySQL Workbench Forward Engineering
 
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+-- -----------------------------------------------------
+-- Schema grocerystoredb
+-- -----------------------------------------------------
 DROP SCHEMA IF EXISTS `grocerystoredb` ;
 
 -- -----------------------------------------------------
@@ -137,6 +147,26 @@ COLLATE = utf8mb4_0900_ai_ci;
 
 
 -- -----------------------------------------------------
+-- Table `grocerystoredb`.`clubcard`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `grocerystoredb`.`clubcard` ;
+
+CREATE TABLE IF NOT EXISTS `grocerystoredb`.`clubcard` (
+  `Card_ID` INT NOT NULL,
+  `Points_Balance` INT NOT NULL,
+  `Customer_ID` INT NULL DEFAULT NULL,
+  `Last_Updated` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Card_ID`),
+  INDEX `Customer_ID` (`Customer_ID` ASC) VISIBLE,
+  CONSTRAINT `clubcard_ibfk_1`
+    FOREIGN KEY (`Customer_ID`)
+    REFERENCES `grocerystoredb`.`customer` (`Customer_ID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
 -- Table `grocerystoredb`.`customeraddress`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `grocerystoredb`.`customeraddress` ;
@@ -179,23 +209,6 @@ CREATE TABLE IF NOT EXISTS `grocerystoredb`.`customerfeedback` (
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `grocerystoredb`.`discount`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `grocerystoredb`.`discount` ;
-
-CREATE TABLE IF NOT EXISTS `grocerystoredb`.`discount` (
-  `Discount_ID` INT NOT NULL AUTO_INCREMENT,
-  `Discount_Percentage` DECIMAL(5,2) NOT NULL,
-  `Start_Date` DATE NOT NULL,
-  `End_Date` DATE NOT NULL,
-  PRIMARY KEY (`Discount_ID`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
 
 -- -----------------------------------------------------
 -- Table `grocerystoredb`.`inventory`
@@ -267,7 +280,9 @@ CREATE TABLE IF NOT EXISTS `grocerystoredb`.`order` (
   `Order_ID` INT NOT NULL AUTO_INCREMENT,
   `Customer_ID` INT NULL DEFAULT NULL,
   `Order_Date` DATE NOT NULL,
+  `Discount_Amount` DECIMAL(10,2) NULL DEFAULT '0.00',
   `Total_Amount` DECIMAL(10,2) NOT NULL,
+  `Order_Status` ENUM('Pending', 'Complete') NOT NULL DEFAULT 'Pending',
   PRIMARY KEY (`Order_ID`),
   INDEX `Customer_ID` (`Customer_ID` ASC) VISIBLE,
   CONSTRAINT `order_ibfk_1`
@@ -298,20 +313,6 @@ CREATE TABLE IF NOT EXISTS `grocerystoredb`.`orderitem` (
   CONSTRAINT `orderitem_ibfk_2`
     FOREIGN KEY (`Product_ID`)
     REFERENCES `grocerystoredb`.`product` (`Product_ID`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `grocerystoredb`.`orderstatus`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `grocerystoredb`.`orderstatus` ;
-
-CREATE TABLE IF NOT EXISTS `grocerystoredb`.`orderstatus` (
-  `Status_ID` INT NOT NULL AUTO_INCREMENT,
-  `Status_Name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`Status_ID`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
@@ -377,6 +378,27 @@ CREATE TABLE IF NOT EXISTS `grocerystoredb`.`paymentmethod` (
   CONSTRAINT `paymentmethod_ibfk_1`
     FOREIGN KEY (`Customer_ID`)
     REFERENCES `grocerystoredb`.`customer` (`Customer_ID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `grocerystoredb`.`pointstransaction`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `grocerystoredb`.`pointstransaction` ;
+
+CREATE TABLE IF NOT EXISTS `grocerystoredb`.`pointstransaction` (
+  `Transaction_ID` INT NOT NULL AUTO_INCREMENT,
+  `Card_ID` INT NULL DEFAULT NULL,
+  `Transaction_Type` VARCHAR(50) NULL DEFAULT NULL,
+  `Points_Changed` INT NULL DEFAULT NULL,
+  `Transaction_Date` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Transaction_ID`),
+  INDEX `Card_ID` (`Card_ID` ASC) VISIBLE,
+  CONSTRAINT `pointstransaction_ibfk_1`
+    FOREIGN KEY (`Card_ID`)
+    REFERENCES `grocerystoredb`.`clubcard` (`Card_ID`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
@@ -709,47 +731,6 @@ COLLATE = utf8mb4_0900_ai_ci;
 
 
 -- -----------------------------------------------------
--- Table `grocerystoredb`.`warehouse`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `grocerystoredb`.`warehouse` ;
-
-CREATE TABLE IF NOT EXISTS `grocerystoredb`.`warehouse` (
-  `Warehouse_ID` INT NOT NULL AUTO_INCREMENT,
-  `Warehouse_Name` VARCHAR(255) NOT NULL,
-  `Location` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`Warehouse_ID`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `grocerystoredb`.`stockmovement`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `grocerystoredb`.`stockmovement` ;
-
-CREATE TABLE IF NOT EXISTS `grocerystoredb`.`stockmovement` (
-  `Movement_ID` INT NOT NULL AUTO_INCREMENT,
-  `Warehouse_ID` INT NULL DEFAULT NULL,
-  `Product_ID` INT NULL DEFAULT NULL,
-  `Movement_Date` DATE NOT NULL,
-  `Quantity` INT NOT NULL,
-  `Movement_Type` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`Movement_ID`),
-  INDEX `Warehouse_ID` (`Warehouse_ID` ASC) VISIBLE,
-  INDEX `Product_ID` (`Product_ID` ASC) VISIBLE,
-  CONSTRAINT `stockmovement_ibfk_1`
-    FOREIGN KEY (`Warehouse_ID`)
-    REFERENCES `grocerystoredb`.`warehouse` (`Warehouse_ID`),
-  CONSTRAINT `stockmovement_ibfk_2`
-    FOREIGN KEY (`Product_ID`)
-    REFERENCES `grocerystoredb`.`product` (`Product_ID`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
 -- Table `grocerystoredb`.`supplierproduct`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `grocerystoredb`.`supplierproduct` ;
@@ -804,7 +785,7 @@ CREATE TABLE IF NOT EXISTS `grocerystoredb`.`stockreplenishment` (
   `SupplierProduct_ID` INT NULL DEFAULT NULL,
   `Replenishment_Date` DATE NOT NULL,
   `Quantity` INT NOT NULL,
-  `Invoice_ID` INT NULL,
+  `Invoice_ID` INT NOT NULL,
   PRIMARY KEY (`Replenishment_ID`),
   INDEX `SupplierProduct_ID` (`SupplierProduct_ID` ASC) VISIBLE,
   INDEX `fk_stockreplenishment_supplierinvoice1_idx` (`Invoice_ID` ASC) VISIBLE,
@@ -865,39 +846,7 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
--- -----------------------------------------------------
--- Table `grocerystoredb`.`clubcard`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `grocerystoredb`.`clubcard`;
-CREATE TABLE `grocerystoredb`.`clubcard` (
-    Card_ID INT PRIMARY KEY,
-    Points_Balance INT NOT NULL,
-    Customer_ID INT,
-    Last_Updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Customer_ID) REFERENCES `grocerystoredb`.`customer`(Customer_ID)
-);
 
--- -----------------------------------------------------
--- Table `grocerystoredb`.`voucher`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `grocerystoredb`.`voucher`;
-CREATE TABLE `grocerystoredb`.`voucher` (
-    Voucher_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Card_ID INT,
-    Voucher_Value DECIMAL(10,2),
-    Redemption_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Card_ID) REFERENCES `grocerystoredb`.`clubcard`(Card_ID)
-);
-
--- -----------------------------------------------------
--- Table `grocerystoredb`.`pointstransaction`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `grocerystoredb`.`pointstransaction`;
-CREATE TABLE pointstransaction (
-    Transaction_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Card_ID INT,
-    Transaction_Type VARCHAR(50),
-    Points_Changed INT,
-    Transaction_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Card_ID) REFERENCES `grocerystoredb`.`clubcard`(Card_ID)
-);
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
