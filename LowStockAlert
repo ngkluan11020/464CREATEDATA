@@ -1,0 +1,18 @@
+
+CREATE TRIGGER lowstockalert
+AFTER UPDATE ON productavailability
+FOR EACH ROW
+BEGIN
+  DECLARE category_threshold INT;
+
+  -- Retrieve the threshold for the product's category
+  SELECT Low_Stock_Trigger INTO category_threshold
+  FROM category
+  WHERE Category_ID = NEW.Category_ID;
+
+  -- Check if the new stock level is below the category threshold
+  IF NEW.Available_Stock < category_threshold THEN
+    INSERT INTO lowstockalert (Product_ID, Current_Stock, Alert_Date)
+    VALUES (NEW.Product_ID, NEW.Available_Stock, NOW());
+  END IF;
+END;
