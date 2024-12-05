@@ -1,9 +1,8 @@
--- Procedure to add points to a customer's Clubcard based on the order total
+
 DELIMITER //
 
-CREATE PROCEDURE AddClubcardPoints(IN orderId INT)
+CREATE PROCEDURE AddClubcardPoints(IN orderId INT, IN customerId INT)
 BEGIN
-    DECLARE customerId INT;
     DECLARE cardId INT;
     DECLARE orderTotal DECIMAL(10,2);
     DECLARE pointsToAdd INT;
@@ -15,14 +14,14 @@ BEGIN
         -- If an error occurs, rollback the transaction
         ROLLBACK;
         -- Optionally, return an error message or take other actions
-        SELECT 'An error occurred, transaction rolled back.' AS ErrorMessage;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'An error occurred, transaction rolled back.';
     END;
 
     -- Start the transaction
     START TRANSACTION;
 
-    -- Step 1: Get the order details
-    SELECT `Customer_ID`, `Total_Amount` INTO customerId, orderTotal
+    -- Step 1: Get the order details (excluding the customer ID)
+    SELECT `Total_Amount` INTO orderTotal
     FROM `grocerystoredb`.`order`
     WHERE `Order_ID` = orderId;
 
@@ -31,9 +30,9 @@ BEGIN
     FROM `grocerystoredb`.`clubcard`
     WHERE `Customer_ID` = customerId;
 
-    -- Step 3: Calculate points to add based on the fixed policy (2 point per £1 spent)
+    -- Step 3: Calculate points to add based on the fixed policy (2 points per £1 spent)
     SET orderTotal = ROUND(orderTotal);
-    SET pointsToAdd = FLOOR(orderTotal * 2);  -- Assuming 2 point per £1 spent
+    SET pointsToAdd = orderTotal * 2;  -- Assuming 2 points per £1 spent
 
     -- Step 4: Add points to the customer's Clubcard
     UPDATE `grocerystoredb`.`clubcard`
@@ -45,20 +44,11 @@ BEGIN
     INSERT INTO `grocerystoredb`.`pointstransaction` (`Card_ID`, `Transaction_Type`, `Points_Changed`, `Transaction_Date`)
     VALUES (cardId, 'Earned', pointsToAdd, CURRENT_TIMESTAMP);
 
-    -- Step 6: Update the order to reflect points awarded
-    UPDATE `grocerystoredb`.`order`
-    SET `Points_Awarded` = pointsToAdd
-    WHERE `Order_ID` = orderId;
-
     -- If all steps are successful, commit the transaction
     COMMIT;
-
-    -- Optionally, return a success message
-    SELECT 'Points added successfully!' AS Status;
 END //
 
 DELIMITER ;
 
-
-
-CALL AddClubcardPoints(123); -- where 123 is the Order_ID
+-- Example call to the procedure
+CALL AddClubcardPoints(123, 456);  -- where 123 is the Order_ID and 456 is the Customer_ID
