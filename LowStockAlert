@@ -1,6 +1,6 @@
 
 CREATE TRIGGER lowstockalert
-AFTER UPDATE ON productavailability
+AFTER UPDATE ON Inventory
 FOR EACH ROW
 BEGIN
   DECLARE category_threshold INT;
