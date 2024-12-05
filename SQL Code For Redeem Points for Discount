@@ -1,3 +1,4 @@
+
 DELIMITER //
 CREATE PROCEDURE ApplyDiscountUsingPoints(
     IN p_CustomerID INT,       -- Customer ID
@@ -26,15 +27,15 @@ BEGIN
     FROM Clubcard
     WHERE Customer_ID = p_CustomerID;
 
-    IF v_TotalPoints < p_UsePoints THEN
-        SET v_StatusMessage = CONCAT('Insufficient points. You need ', p_UsePoints - v_TotalPoints, ' more points.');
-        SELECT v_StatusMessage AS Status;
-        -- Rollback the transaction if insufficient points
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insufficient points';
-    END IF;
-
-    -- Step 2: Calculate discount value (100 points = £1 discount)
+IF v_TotalPoints < p_UsePoints THEN
+    SET v_StatusMessage = CONCAT('Insufficient points. You need ', p_UsePoints - v_TotalPoints, ' more points.');
+    
+    -- Rollback the transaction if insufficient points
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_StatusMessage;
+END IF;
+   
+   -- Step 2: Calculate discount value (100 points = £1 discount)
     SET v_DiscountValue = (p_UsePoints / 100);
 
     -- Step 3: Deduct points and update the balance
@@ -67,4 +68,6 @@ END //
 
 DELIMITER ;
 
-CALL ApplyDiscountUsingPoints(123, 456, 500);
+CALL ApplyDiscountUsingPoints(123, 456, 500);    
+
+
