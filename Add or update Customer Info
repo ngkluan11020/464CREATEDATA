@@ -32,3 +32,63 @@ BEGIN
         WHERE Customer_ID = p_CustomerID;
     END IF;
 END$$
+---------------------------------------------------------------------------------------------------------
+-- Use Case 1, we created a procedure to help register or update a customer information in the system
+DROP PROCEDURE IF EXISTS RegisterOrUpdateCustomer;
+DELIMITER $$ -- Change the statement delimiter to $$ to allow semicolons within the procedure
+CREATE PROCEDURE RegisterOrUpdateCustomer( -- Define the procecure
+    -- Input parameters:
+    IN p_CustomerID INT,         -- Customer ID (use NULL for new registration)
+    IN p_First_Name VARCHAR(45), -- First name of the customer
+    IN p_Last_Name VARCHAR(45),  -- Last name of the customer
+    IN p_Email VARCHAR(255),     -- Email address of the customer
+    IN p_Phone VARCHAR(20),      -- Phone number of the customer
+    IN p_Address VARCHAR(45),    -- Address of the customer
+    IN p_City VARCHAR(45),       -- City of residence
+    IN p_Postcode VARCHAR(10)    -- Postal code of the customer
+)
+BEGIN
+    -- Check if the customer ID is NULL
+    IF p_CustomerID IS NULL THEN
+        -- If NULL, register a new customer by inserting a new record
+        INSERT INTO customer (
+            First_Name, Last_Name, Email, Phone, Address, City, Postcode
+        )
+        VALUES (
+            p_First_Name,       -- Use the provided first name
+            p_Last_Name,        -- Use the provided last name
+            p_Email,            -- Use the provided email address
+            p_Phone,            -- Use the provided phone number
+            p_Address,          -- Use the provided address
+            p_City,             -- Use the provided city
+            p_Postcode          -- Use the provided postal code
+        );
+    ELSE
+        -- If Customer ID is NOT NULL, update the existing customer
+        UPDATE customer
+        SET 
+            First_Name = p_First_Name, -- Update the first name
+            Last_Name = p_Last_Name,   -- Update the last name
+            Email = p_Email,           -- Update the email address
+            Phone = p_Phone,           -- Update the phone number
+            Address = p_Address,       -- Update the address
+            City = p_City,             -- Update the city
+            Postcode = p_Postcode      -- Update the postal code
+        WHERE Customer_ID = p_CustomerID; -- Match the record with the provided Customer ID
+    END IF; -- End of conditional logic
+END$$ -- End of the stored procedure
+DELIMITER ; -- Reset the statement delimiter to semicolon
+-- Run this to register a new customer
+CALL RegisterOrUpdateCustomer(
+    NULL,                     -- p_CustomerID (NULL for new registration)
+    'John',                   -- p_First_Name
+    'Doe',                    -- p_Last_Name
+    'john.doe@example.com',   -- p_Email
+    '+44 7129 456709',        -- p_Phone
+    '369 Maple St',           -- p_Address
+    'Liverpool',              -- p_City
+    'L1 8LS'                  -- p_Postcode
+); 
+-- Run this to update information of a customer
+-- Run this to verify whether a customer is register or the information above is updated
+-- ----------------------------------------------------------------------------------------------------------------------------------
